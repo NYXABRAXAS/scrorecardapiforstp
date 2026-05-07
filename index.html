@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Two Wheeler Scorecard Console</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --line: #d9e2ec;
+        --text: #172033;
+        --muted: #637083;
+        --accent: #116d6e;
+        --accent-2: #204b8c;
+        --danger: #b42318;
+        --warn: #a15c07;
+        --ok: #16794c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      header {
+        background: #0d1b2a;
+        color: white;
+        padding: 18px 24px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      header p {
+        margin: 6px 0 0;
+        color: #cbd5e1;
+        font-size: 14px;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(360px, 1.05fr) minmax(360px, 0.95fr);
+        gap: 16px;
+        padding: 16px;
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-width: 0;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .body {
+        padding: 16px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .api-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 1.2fr) minmax(170px, 0.8fr) minmax(150px, 0.7fr);
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 9px 10px;
+        background: white;
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      textarea {
+        min-height: 320px;
+        resize: vertical;
+        font-family: Consolas, monospace;
+        line-height: 1.35;
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+        padding: 10px 13px;
+      }
+
+      button.secondary {
+        background: var(--accent-2);
+      }
+
+      button.ghost {
+        background: #e8eef6;
+        color: var(--text);
+      }
+
+      button.danger {
+        background: var(--danger);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .decision {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfdff;
+      }
+
+      .metric span {
+        color: var(--muted);
+        display: block;
+        font-size: 12px;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 18px;
+        margin-top: 5px;
+        overflow-wrap: anywhere;
+      }
+
+      .STP {
+        color: var(--ok);
+      }
+
+      .CONDITIONAL_STP {
+        color: var(--warn);
+      }
+
+      .NON_STP,
+      .REJECT {
+        color: var(--danger);
+      }
+
+      pre {
+        background: #101827;
+        color: #dbeafe;
+        border-radius: 8px;
+        padding: 12px;
+        overflow: auto;
+        max-height: 360px;
+        font-size: 13px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 9px 7px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-weight: 700;
+        background: #f8fafc;
+        position: sticky;
+        top: 0;
+      }
+
+      .table-wrap {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: auto;
+        max-height: 390px;
+      }
+
+      .status {
+        min-height: 20px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status.ok {
+        color: var(--ok);
+      }
+
+      .status.error {
+        color: var(--danger);
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+        margin: 4px 0 12px;
+      }
+
+      .request-line {
+        background: #eef6f6;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: var(--accent);
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        margin: 8px 0 12px;
+        overflow-wrap: anywhere;
+        padding: 9px 10px;
+      }
+
+      .edit-banner {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid #f2c94c;
+        background: #fff8db;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        color: #6b4e00;
+        font-size: 13px;
+      }
+
+      .rule-form {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .wide {
+        grid-column: span 2;
+      }
+
+      @media (max-width: 980px) {
+        main,
+        .api-row,
+        .row,
+        .decision,
+        .rule-form {
+          grid-template-columns: 1fr;
+        }
+
+        .wide {
+          grid-column: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Two Wheeler Loan STP Scorecard Console</h1>
+      <p>Configure rules, simulate decisions, and generate persisted scorecards from one screen.</p>
+    </header>
+
+    <main>
+      <section>
+        <div class="section-head">
+          <h2>Scorecard Tester</h2>
+          <button class="ghost" onclick="loadSample()">Load Sample</button>
+        </div>
+        <div class="body">
+          <div class="row">
+            <div>
+              <label>Tenant</label>
+              <input id="tenantId" value="default" />
+            </div>
+            <div>
+              <label>Product</label>
+              <select id="productType" onchange="syncProductChange()">
+                <option value="TWO_WHEELER_LOAN">Two Wheeler Loan</option>
+                <option value="NEW_CAR_LOAN">New Car Loan</option>
+                <option value="USED_CAR_LOAN">Used Car Loan</option>
+                <option value="NEW_COMMERCIAL_VEHICLE_LOAN">New Commercial Vehicle</option>
+                <option value="USED_COMMERCIAL_VEHICLE_LOAN">Used Commercial Vehicle</option>
+                <option value="NEW_TRACTOR_LOAN">New Tractor Loan</option>
+                <option value="USED_TRACTOR_LOAN">Used Tractor Loan</option>
+              </select>
+            </div>
+            <div>
+              <label>Lead ID</label>
+              <input id="leadId" value="TW10001" />
+            </div>
+            <div>
+              <label>Journey Trigger</label>
+              <select id="dueDiligenceStatus">
+                <option value="APPROVED">Due Diligence Approved</option>
+                <option value="PENDING">Due Diligence Pending</option>
+                <option value="REJECTED">Due Diligence Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="api-row">
+            <div>
+              <label>API Base URL</label>
+              <input id="apiBaseUrl" />
+            </div>
+            <div>
+              <label>Endpoint</label>
+              <select id="mode" onchange="refreshRequestPreview()">
+                <option value="simulate-scorecard">POST /simulate-scorecard</option>
+                <option value="generate-scorecard">POST /generate-scorecard</option>
+              </select>
+            </div>
+            <div>
+              <label>Method</label>
+              <input id="method" value="POST" disabled />
+            </div>
+          </div>
+          <div class="hint">
+            Use simulate for testing only. Use generate after due diligence approval when you want the scorecard result saved against the lead.
+          </div>
+          <div class="request-line" id="requestPreview"></div>
+
+          <label>Request JSON</label>
+          <textarea id="payload"></textarea>
+
+          <div class="actions">
+            <button onclick="runScorecard()">Send API Request</button>
+            <button class="secondary" onclick="triggerAfterDueDiligence()">Trigger After Due Diligence</button>
+            <button class="secondary" onclick="getSavedResult()">Get Saved Result</button>
+            <button class="ghost" onclick="openDocs()">Swagger Docs</button>
+            <button class="ghost" onclick="copyCurl()">Copy cURL</button>
+          </div>
+          <div class="status" id="scoreStatus"></div>
+
+          <div class="decision">
+            <div class="metric">
+              <span>Decision</span>
+              <strong id="decision">-</strong>
+            </div>
+            <div class="metric">
+              <span>Final Score</span>
+              <strong id="finalScore">-</strong>
+            </div>
+            <div class="metric">
+              <span>Journey Action</span>
+              <strong id="journeyAction">-</strong>
+            </div>
+            <div class="metric">
+              <span>Bureau Risk</span>
+              <strong id="bureauRisk">-</strong>
+            </div>
+          </div>
+
+          <pre id="scoreOutput">{}</pre>
+          <label>Request Preview</label>
+          <pre id="requestOutput">{}</pre>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Rule Configuration</h2>
+          <button class="ghost" onclick="loadRules()">Refresh Rules</button>
+        </div>
+        <div class="body">
+          <div class="rule-form">
+            <input id="editingRuleId" type="hidden" />
+            <div>
+              <label>Rule Code</label>
+              <input id="ruleCode" placeholder="CIBIL_SUPER_HIGH" />
+            </div>
+            <div class="wide">
+              <label>Rule Name</label>
+              <input id="ruleName" placeholder="CIBIL score above 800" />
+            </div>
+            <div>
+              <label>Rule Type</label>
+              <select id="ruleType">
+                <option>SCORE</option>
+                <option>HARD_REJECT</option>
+                <option>NON_STP</option>
+                <option>STP_ELIGIBILITY</option>
+              </select>
+            </div>
+            <div>
+              <label>Field Name</label>
+              <input id="fieldName" placeholder="cibilScore" />
+            </div>
+            <div>
+              <label>Operator</label>
+              <select id="operator">
+                <option>&gt;=</option>
+                <option>&gt;</option>
+                <option>&lt;=</option>
+                <option>&lt;</option>
+                <option>=</option>
+                <option>!=</option>
+                <option>BETWEEN</option>
+                <option>IN</option>
+                <option>NOT_IN</option>
+              </select>
+            </div>
+            <div>
+              <label>Value</label>
+              <input id="fieldValue" placeholder="750 or 700,749" />
+            </div>
+            <div>
+              <label>Score Value</label>
+              <input id="scoreValue" placeholder="10" />
+            </div>
+            <div>
+              <label>Score Component</label>
+              <input id="scoreComponent" placeholder="cibil" />
+            </div>
+            <div>
+              <label>Decision Action</label>
+              <select id="decisionAction">
+                <option value="">None</option>
+                <option>SCORE</option>
+                <option>STP</option>
+                <option>UW</option>
+                <option>REJECT</option>
+                <option>NON_STP</option>
+              </select>
+            </div>
+            <div>
+              <label>Reason Code</label>
+              <input id="reasonCode" placeholder="HIGH_CIBIL" />
+            </div>
+            <div>
+              <label>Priority</label>
+              <input id="priority" value="100" />
+            </div>
+          </div>
+
+          <div class="edit-banner" id="editBanner">
+            <span id="editText">Editing rule</span>
+            <button class="ghost" onclick="cancelEdit()">Cancel Edit</button>
+          </div>
+
+          <div class="actions">
+            <button id="saveRuleButton" onclick="saveRule()">Create Rule</button>
+            <button class="ghost" onclick="clearRuleForm()">Clear</button>
+            <button class="secondary" onclick="exportRules()">Export Product Rules</button>
+          </div>
+          <div class="status" id="ruleStatus"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Code</th>
+                  <th>Type</th>
+                  <th>Condition</th>
+                  <th>Score/Action</th>
+                  <th>Status</th>
+              <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rulesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const samplePayload = {
+        tenantId: "default",
+        productType: "TWO_WHEELER_LOAN",
+        application: {
+          leadId: "TW10001",
+          customerName: "ABC",
+          mobile: "9999999999",
+          employmentType: "SALARIED",
+          monthlyIncome: 45000,
+          existingEMI: 8000,
+          foir: 32,
+          loanAmount: 95000,
+          assetCost: 125000,
+          ltv: 76,
+          tenure: 36,
+          dealerId: "DL101",
+          state: "Karnataka",
+          city: "Bangalore",
+          negativeArea: false,
+          fraudFlag: false,
+          faceMatchScore: 92,
+          panVerified: true,
+          aadhaarVerified: true,
+          bankingSurrogate: true,
+          coApplicant: false
+        },
+        bureau: {
+          cibilScore: 753,
+          creditVintageMonths: 123,
+          activeAccounts: 2,
+          closedAccounts: 47,
+          overdueAmount: 0,
+          writtenOffAccounts: 0,
+          settledAccounts: 0,
+          active90PlusDpd: false,
+          maxDPD: 0,
+          dpd30Count: 0,
+          dpd60Count: 0,
+          dpd90Count: 0,
+          creditEnquiries6M: 2,
+          creditEnquiries12M: 4,
+          activeUnsecuredLoans: 1,
+          activeSecuredLoans: 1,
+          jointAccounts: 0,
+          creditUtilization: 2
+        }
+      };
+
+      function setStatus(id, message) {
+        const element = document.getElementById(id);
+        element.textContent = message;
+        element.className = "status";
+      }
+
+      function setStatusState(id, message, state) {
+        const element = document.getElementById(id);
+        element.textContent = message;
+        element.className = `status ${state || ""}`;
+      }
+
+      function loadSample() {
+        document.getElementById("payload").value = JSON.stringify(samplePayload, null, 2);
+        document.getElementById("leadId").value = samplePayload.application.leadId;
+        refreshRequestPreview();
+      }
+
+      function syncProductChange() {
+        try {
+          const payload = JSON.parse(document.getElementById("payload").value);
+          payload.productType = document.getElementById("productType").value;
+          document.getElementById("payload").value = JSON.stringify(payload, null, 2);
+        } catch (_) {
+          // Keep user-entered JSON untouched if it is mid-edit.
+        }
+        cancelEdit();
+        loadRules();
+        refreshRequestPreview();
+      }
+
+      function syncHeaderFields(payload) {
+        payload.tenantId = document.getElementById("tenantId").value || "default";
+        payload.productType = document.getElementById("productType").value || "TWO_WHEELER_LOAN";
+        payload.application.leadId = document.getElementById("leadId").value || payload.application.leadId;
+        return payload;
+      }
+
+      function getBaseUrl() {
+        return (document.getElementById("apiBaseUrl").value || window.location.origin).replace(/\/$/, "");
+      }
+
+      function buildUrl(path) {
+        return `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+      }
+
+      function getScorecardPath() {
+        return `/${document.getElementById("mode").value}`;
+      }
+
+      function refreshRequestPreview() {
+        const path = getScorecardPath();
+        document.getElementById("requestPreview").textContent = `POST ${buildUrl(path)}`;
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(buildUrl(path), {
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options
+        });
+        const text = await response.text();
+        let body = null;
+        try {
+          body = text ? JSON.parse(text) : null;
+        } catch (_) {
+          body = text;
+        }
+        if (!response.ok) {
+          throw new Error(body?.detail || body || response.statusText);
+        }
+        return { body, status: response.status, statusText: response.statusText };
+      }
+
+      function readPayload() {
+        const payload = syncHeaderFields(JSON.parse(document.getElementById("payload").value));
+        document.getElementById("payload").value = JSON.stringify(payload, null, 2);
+        return payload;
+      }
+
+      function renderRequest(path, payload) {
+        const request = {
+          method: "POST",
+          url: buildUrl(path),
+          headers: { "Content-Type": "application/json" },
+          body: payload
+        };
+        document.getElementById("requestOutput").textContent = JSON.stringify(request, null, 2);
+      }
+
+      function renderScore(body) {
+        document.getElementById("scoreOutput").textContent = JSON.stringify(body, null, 2);
+        const decision = document.getElementById("decision");
+        decision.textContent = body.decision || "-";
+        decision.className = body.decision || "";
+        document.getElementById("finalScore").textContent = body.finalScore ?? "-";
+        document.getElementById("journeyAction").textContent = body.journeyAction || "-";
+        document.getElementById("bureauRisk").textContent = body.bureauRisk || "-";
+      }
+
+      async function runScorecard() {
+        try {
+          setStatus("scoreStatus", "Sending API request...");
+          const payload = readPayload();
+          const path = getScorecardPath();
+          renderRequest(path, payload);
+          const result = await api(path, { method: "POST", body: JSON.stringify(payload) });
+          renderScore(result.body);
+          setStatusState("scoreStatus", `HTTP ${result.status} ${result.statusText} - scorecard completed.`, "ok");
+        } catch (error) {
+          setStatusState("scoreStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function triggerAfterDueDiligence() {
+        const dueDiligenceStatus = document.getElementById("dueDiligenceStatus").value;
+        if (dueDiligenceStatus !== "APPROVED") {
+          setStatusState(
+            "scoreStatus",
+            `API not triggered because due diligence is ${dueDiligenceStatus}. Select Approved to call the scorecard.`,
+            "error"
+          );
+          return;
+        }
+        document.getElementById("mode").value = "generate-scorecard";
+        refreshRequestPreview();
+        await runScorecard();
+      }
+
+      async function getSavedResult() {
+        try {
+          const leadId = document.getElementById("leadId").value;
+          setStatus("scoreStatus", "Fetching saved result...");
+          const result = await api(`/scorecard/${encodeURIComponent(leadId)}`);
+          renderScore(result.body);
+          setStatusState("scoreStatus", `HTTP ${result.status} ${result.statusText} - saved result loaded.`, "ok");
+        } catch (error) {
+          setStatusState("scoreStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function loadRules() {
+        try {
+          setStatus("ruleStatus", "Loading rules...");
+          const tenant = encodeURIComponent(document.getElementById("tenantId").value || "default");
+          const product = encodeURIComponent(document.getElementById("productType").value || "TWO_WHEELER_LOAN");
+          const result = await api(`/rules?tenant_id=${tenant}&product_type=${product}`);
+          const rules = result.body;
+          const rows = rules.map(rule => `
+            <tr>
+              <td>${rule.id}</td>
+              <td>${rule.rule_code}<br><small>${rule.reason_code}</small></td>
+              <td>${rule.rule_type}</td>
+              <td>${rule.field_name} ${rule.operator} ${rule.field_value}</td>
+              <td>${rule.score_value ?? ""} ${rule.decision_action ?? ""}</td>
+              <td>${rule.is_active ? "Active" : "Disabled"}</td>
+              <td>
+                <button class="ghost" onclick='editRule(${JSON.stringify(rule)})'>Edit</button>
+                <button class="${rule.is_active ? "danger" : "secondary"}" onclick="toggleRule(${rule.id}, ${!rule.is_active})">
+                  ${rule.is_active ? "Disable" : "Enable"}
+                </button>
+              </td>
+            </tr>
+          `).join("");
+          document.getElementById("rulesTable").innerHTML = rows;
+          setStatus("ruleStatus", `${rules.length} rules loaded.`);
+        } catch (error) {
+          setStatus("ruleStatus", `Error: ${error.message}`);
+        }
+      }
+
+      function buildRulePayload() {
+        const scoreValue = document.getElementById("scoreValue").value;
+        return {
+          tenant_id: document.getElementById("tenantId").value || "default",
+          product_type: document.getElementById("productType").value || "TWO_WHEELER_LOAN",
+          rule_code: document.getElementById("ruleCode").value,
+          rule_name: document.getElementById("ruleName").value,
+          rule_type: document.getElementById("ruleType").value,
+          field_name: document.getElementById("fieldName").value,
+          operator: document.getElementById("operator").value,
+          field_value: document.getElementById("fieldValue").value,
+          score_value: scoreValue ? Number(scoreValue) : null,
+          score_component: document.getElementById("scoreComponent").value || null,
+          decision_action: document.getElementById("decisionAction").value || null,
+          reason_code: document.getElementById("reasonCode").value,
+          priority: Number(document.getElementById("priority").value || 100),
+          is_active: true
+        };
+      }
+
+      async function saveRule() {
+        const editingRuleId = document.getElementById("editingRuleId").value;
+        if (editingRuleId) {
+          await updateRule(editingRuleId);
+        } else {
+          await createRule();
+        }
+      }
+
+      async function createRule() {
+        try {
+          setStatus("ruleStatus", "Creating rule...");
+          const payload = buildRulePayload();
+          await api("/rules", { method: "POST", body: JSON.stringify(payload) });
+          clearRuleForm();
+          await loadRules();
+          setStatus("ruleStatus", "Rule created.");
+        } catch (error) {
+          setStatus("ruleStatus", `Error: ${error.message}`);
+        }
+      }
+
+      async function updateRule(ruleId) {
+        try {
+          setStatus("ruleStatus", "Updating rule...");
+          const payload = buildRulePayload();
+          delete payload.tenant_id;
+          delete payload.product_type;
+          delete payload.rule_code;
+          delete payload.rule_type;
+          payload.actor = "admin-ui";
+          await api(`/rules/${ruleId}`, { method: "PUT", body: JSON.stringify(payload) });
+          clearRuleForm();
+          await loadRules();
+          setStatus("ruleStatus", "Rule updated.");
+        } catch (error) {
+          setStatus("ruleStatus", `Error: ${error.message}`);
+        }
+      }
+
+      function editRule(rule) {
+        document.getElementById("editingRuleId").value = rule.id;
+        document.getElementById("ruleCode").value = rule.rule_code || "";
+        document.getElementById("ruleName").value = rule.rule_name || "";
+        document.getElementById("ruleType").value = rule.rule_type || "SCORE";
+        document.getElementById("fieldName").value = rule.field_name || "";
+        document.getElementById("operator").value = rule.operator || "=";
+        document.getElementById("fieldValue").value = rule.field_value || "";
+        document.getElementById("scoreValue").value = rule.score_value ?? "";
+        document.getElementById("scoreComponent").value = rule.score_component || "";
+        document.getElementById("decisionAction").value = rule.decision_action || "";
+        document.getElementById("reasonCode").value = rule.reason_code || "";
+        document.getElementById("priority").value = rule.priority || 100;
+        document.getElementById("saveRuleButton").textContent = "Save Rule Changes";
+        document.getElementById("editText").textContent = `Editing #${rule.id} - ${rule.rule_code}`;
+        document.getElementById("editBanner").style.display = "flex";
+        setStatus("ruleStatus", "Rule loaded into form. Change values and save.");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      async function toggleRule(id, isActive) {
+        try {
+          await api(`/rules/${id}/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ is_active: isActive, actor: "admin-ui" })
+          });
+          await loadRules();
+        } catch (error) {
+          setStatus("ruleStatus", `Error: ${error.message}`);
+        }
+      }
+
+      function clearRuleForm() {
+        [
+          "ruleCode",
+          "ruleName",
+          "fieldName",
+          "fieldValue",
+          "scoreValue",
+          "scoreComponent",
+          "reasonCode"
+        ].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("priority").value = "100";
+        cancelEdit();
+      }
+
+      function cancelEdit() {
+        document.getElementById("editingRuleId").value = "";
+        document.getElementById("saveRuleButton").textContent = "Create Rule";
+        document.getElementById("editBanner").style.display = "none";
+      }
+
+      async function exportRules() {
+        try {
+          const tenant = encodeURIComponent(document.getElementById("tenantId").value || "default");
+          const product = encodeURIComponent(document.getElementById("productType").value || "TWO_WHEELER_LOAN");
+          const result = await api(`/rules?tenant_id=${tenant}&product_type=${product}`);
+          const rules = result.body;
+          const blob = new Blob([JSON.stringify(rules, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `${product}_rules.json`;
+          link.click();
+          URL.revokeObjectURL(url);
+          setStatus("ruleStatus", "Rules exported.");
+        } catch (error) {
+          setStatus("ruleStatus", `Error: ${error.message}`);
+        }
+      }
+
+      function openDocs() {
+        window.open(buildUrl("/docs"), "_blank");
+      }
+
+      async function copyCurl() {
+        try {
+          const payload = readPayload();
+          const path = getScorecardPath();
+          renderRequest(path, payload);
+          const curl = [
+            `curl -X POST "${buildUrl(path)}"`,
+            `-H "Content-Type: application/json"`,
+            `-d '${JSON.stringify(payload)}'`
+          ].join(" ");
+          await navigator.clipboard.writeText(curl);
+          setStatusState("scoreStatus", "cURL copied.", "ok");
+        } catch (error) {
+          setStatusState("scoreStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      document.getElementById("apiBaseUrl").value = window.location.origin;
+      document.getElementById("apiBaseUrl").addEventListener("input", refreshRequestPreview);
+      loadSample();
+      loadRules();
+    </script>
+  </body>
+</html>

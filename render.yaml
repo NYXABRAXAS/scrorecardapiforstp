@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: scorecard-stp-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head && python -m app.db.init_db
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scorecard-stp-db
+          property: connectionString
+      - key: REDIS_URL
+        value: ""
+      - key: ENABLE_AUTH
+        value: "false"
+      - key: DEFAULT_TENANT_ID
+        value: default
+      - key: DEFAULT_PRODUCT_TYPE
+        value: TWO_WHEELER_LOAN
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+
+databases:
+  - name: scorecard-stp-db
+    plan: free
+    databaseName: scorecard
+    user: scorecard
+
